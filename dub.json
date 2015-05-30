@@ -1,11 +1,11 @@
 {
-	"name": "desstdx",
+    "name": "desstdx",
     "description": "D Extended Set Standart Lib Extend",
     "authors": [ "Oleg Butko (deviator)" ],
     "license": "MIT",
-	"targetType": "sourceLibrary",
-	"importPaths": [ "src" ],
-	"sourcePaths": [ "src" ],
+    "targetType": "sourceLibrary",
+    "importPaths": [ "src" ],
+    "sourcePaths": [ "src" ],
     "dependencies":
     {
         "dests" : "~>0.2.0"
