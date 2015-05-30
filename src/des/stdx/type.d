@@ -9,6 +9,13 @@ import std.exception : enforce;
 
 import des.ts;
 
+///
+class DataTypeException : Exception
+{
+    this( string msg, string file=__FILE__, size_t line=__LINE__ ) @safe pure nothrow
+    { super( msg, file, line ); }
+}
+
 /// data types description for untyped `void[]` arrays
 enum DataType
 {
@@ -448,7 +455,7 @@ unittest
 ///
 template convertValue( DataType DT )
 {
-    auto convertValue(T)( T val ) pure
+    auto convertValue(T,string file=__FILE__,size_t line=__LINE__ )( T val )
     {
         alias SDT = storeDataType!DT;
 
@@ -456,23 +463,22 @@ template convertValue( DataType DT )
             return cast(SDT)( val );
         else static if( DT == DataType.RAWBYTE )
             static assert( 0, "can't convert any value to RAWBYTE" );
-        else
+        else static if( isFloatingPoint!T )
         {
-            static if( isFloatingPoint!T )
+            static if( isSigned!SDT )
             {
-                static if( isSigned!SDT )
-                {
-                    enforce( -1 <= val && val <= 1, "value exceed signed limits [-1,1]" );
-                    return cast(SDT)( (val>0?SDT.max:SDT.min) * abs(val) );
-                }
-                else
-                {
-                    enforce( 0 <= val && val <= 1, "value exceed unsigned limits [0,1]" );
-                    return cast(SDT)( SDT.max * val );
-                }
+                enforce( -1 <= val && val <= 1,
+                        new DataTypeException( format( "value %s exceed signed limits [-1,1]", val ), file, line ) );
+                return cast(SDT)( (val>0?SDT.max:SDT.min) * abs(val) );
             }
-            else static assert( 0, "can't convert int value to fixed point value" );
+            else
+            {
+                enforce( 0 <= val && val <= 1,
+                        new DataTypeException( format( "value %s exceed unsigned limits [0,1]", val ), file, line ) );
+                return cast(SDT)( SDT.max * val );
+            }
         }
+        else static assert( 0, "can't convert int value to fixed point value" );
     }
 }
 
@@ -534,22 +540,15 @@ unittest
     static assert( convertValue!(DataType.NORM_DOUBLE)(-0.5) == long.min/2 );
     static assert( convertValue!(DataType.NORM_DOUBLE)(-1.0) == long.min );
 
-    assert(  mustExcept({ convertValue!(DataType.NORM_FIXED)(1.1); }) );
-    assert( !mustExcept({ convertValue!(DataType.NORM_FIXED)(-0.1); }) );
+    convertValue!(DataType.NORM_FIXED)(-0.1);
+    assertExcept!DataTypeException({ convertValue!(DataType.NORM_FIXED)(1.1); });
 
-    assert(  mustExcept({ convertValue!(DataType.UNORM_FIXED)(1.1); }) );
-    assert(  mustExcept({ convertValue!(DataType.UNORM_FIXED)(-0.1); }) );
+    assertExcept!DataTypeException({ convertValue!(DataType.UNORM_FIXED)(-0.1); });
+    assertExcept!DataTypeException({ convertValue!(DataType.UNORM_FIXED)(1.1); });
 }
 
 /+
 TODO: move here `flatData`
-
-///
-class DataTypeException : Exception
-{
-    this( string msg, string file=__FILE__, size_t line=__LINE__ ) @safe pure nothrow
-    { super( msg, file, line ); }
-}
 
 /// untyped data assign
 void utDataAssign(T...)( in ElemInfo elem, void* buffer, in T vals ) pure

@@ -8,6 +8,8 @@ public
     import std.traits;
 }
 
+import des.ts;
+
 /// map and get result as array
 template amap(fun...) if ( fun.length >= 1 )
 {
@@ -22,7 +24,7 @@ unittest
     int[] res = [ 1, 2, 3 ];
     void func( int[] arr ) { res ~= arr; }
     func( amap!(a=>a^^2)(res) );
-    assert( res == [ 1, 2, 3, 1, 4, 9 ] );
+    assertEq( res, [ 1, 2, 3, 1, 4, 9 ] );
 }
 
 ///

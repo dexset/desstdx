@@ -138,10 +138,10 @@ unittest
     auto msg = Msg("ok");
 
     auto a = shared PData( PData( msg ) );
-    assert( a.as!Msg == msg );
+    assertEq( a.as!Msg, msg );
 
     auto b = immutable PData( PData( [msg] ) );
-    assert( b.as!(Msg[]) == [msg] );
+    assertEq( b.as!(Msg[]), [msg] );
 }
 
 unittest
@@ -155,9 +155,9 @@ unittest
 unittest
 {
     auto a = PData( [.1,.2,.3] );
-    assert( eq( a.as!(double[]), [.1,.2,.3] ) );
+    assertEq( a.as!(double[]), [.1,.2,.3] );
     a = "hello";
-    assert( eq( a.as!string, "hello" ) );
+    assertEq( a.as!string, "hello" );
 }
 
 unittest // Known problems
