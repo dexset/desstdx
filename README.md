@@ -1,4 +1,6 @@
 ## D Extended Set (DES) Standart Lib Extend
+[![Build Status](https://travis-ci.org/dexset/desstdx.svg?branch=master)](https://travis-ci.org/dexset/desstdx)
+[![Join the chat at https://gitter.im/dexset/discussion](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dexset/discussion)
 
 #### algorithm
 minimal wraps around `std.algorithm`
