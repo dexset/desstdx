@@ -138,4 +138,8 @@ if( E.length > 0 )
 unittest
 {
     assertEq( flatData!float([1.0,2],[[3,4]],5,[6,7]), [1,2,3,4,5,6,7] );
+
+    static struct Vec(size_t N){ float[N] data; alias data this; }
+    assertEq( flatData!double( Vec!3([1,2,3]) ), [1,2,3] );
+    assertEq( flatData!double( Vec!1([2]) ), [2] );
 }

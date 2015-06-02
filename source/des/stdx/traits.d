@@ -47,7 +47,7 @@ template canUseAsArray(R)
     (inout int = 0)
     {
         R r = R.init;
-        auto e = r[1];
+        auto e = r[0];
         static assert( hasLength!R );
         static assert( !isNarrowString!R );
     }));
