@@ -39,6 +39,43 @@ unittest
     static assert( !isImaginary!(typeof(4+3i)) );
 }
 
+///
+template canUseAsArray(R)
+{
+    import std.range : hasLength;
+    enum canUseAsArray = is(typeof(
+    (inout int = 0)
+    {
+        R r = R.init;
+        auto e = r[1];
+        static assert( hasLength!R );
+        static assert( !isNarrowString!R );
+    }));
+}
+
+///
+unittest
+{
+    static assert(  canUseAsArray!(int[]) );
+    static assert(  canUseAsArray!(int[3]) );
+    static assert(  canUseAsArray!(float[]) );
+
+    static struct Vec0 { float[] data; alias data this; }
+    static assert(  canUseAsArray!Vec0 );
+
+    static struct Vec1 { float[] data; }
+    static assert( !canUseAsArray!Vec1 );
+
+    static struct Vec2 { float[3] data; alias data this; }
+    static assert(  canUseAsArray!Vec2 );
+
+    static assert( !canUseAsArray!(string) );
+    static assert( !canUseAsArray!(wstring) );
+    static assert( !canUseAsArray!int );
+    static assert( !canUseAsArray!float );
+    static assert( !canUseAsArray!(immutable(void)[]) );
+}
+
 /++ checks has type T basic math operations
  +
  + * `isAssignable!(Unqual!T,T)`
