@@ -9,6 +9,7 @@ import std.exception : enforce;
 
 import des.ts;
 import des.stdx.range;
+import des.stdx.string;
 
 ///
 class DataTypeException : Exception
@@ -456,10 +457,10 @@ unittest
 ///
 template convertValue( DataType DT )
 {
-    auto convertValue(T,string file=__FILE__,size_t line=__LINE__ )( T val )
-    {
-        alias SDT = storeDataType!DT;
+    alias SDT = storeDataType!DT;
 
+    auto convertValue(T,string file=__FILE__,size_t line=__LINE__ )( T val ) pure
+    {
         static if( isDirectDataType!DT )
             return cast(SDT)( val );
         else static if( DT == DataType.RAWBYTE )
@@ -469,13 +470,15 @@ template convertValue( DataType DT )
             static if( isSigned!SDT )
             {
                 enforce( -1 <= val && val <= 1,
-                        new DataTypeException( format( "value %s exceed signed limits [-1,1]", val ), file, line ) );
+                        new DataTypeException( "value " ~ floatToStr(val) ~
+                                     " exceed signed limits [-1,1]", file, line ) );
                 return cast(SDT)( (val>0?SDT.max:SDT.min) * abs(val) );
             }
             else
             {
                 enforce( 0 <= val && val <= 1,
-                        new DataTypeException( format( "value %s exceed unsigned limits [0,1]", val ), file, line ) );
+                        new DataTypeException( "value " ~ floatToStr(val) ~
+                                    " exceed unsigned limits [0,1]", file, line ) );
                 return cast(SDT)( SDT.max * val );
             }
         }
@@ -486,60 +489,90 @@ template convertValue( DataType DT )
 ///
 unittest
 {
-    static assert( is( typeof( convertValue!(DataType.BYTE)(1) ) == byte ) );
-    static assert( convertValue!(DataType.BYTE)(2) == 2 );
+    {
+        auto r = convertValue!(DataType.BYTE)(1);
+        static assert( is( typeof(r) == byte ) );
+        static assert( convertValue!(DataType.BYTE)(2) == 2 );
+    }
 
-    static assert( is( typeof( convertValue!(DataType.FLOAT)(1) ) == float ) );
-    static assert( convertValue!(DataType.FLOAT)(1) == 1 );
-    static assert( convertValue!(DataType.FLOAT)(1.1) == 1.1 );
+    {
+        auto r = convertValue!(DataType.FLOAT)(1);
+        static assert( is( typeof(r) == float ) );
+        static assert( convertValue!(DataType.FLOAT)(1) == 1 );
+        static assert( convertValue!(DataType.FLOAT)(1.1) == 1.1 );
+    }
 
-    static assert( is( typeof( convertValue!(DataType.UNORM_QUART)(1.0) ) == ubyte ) );
-    static assert( convertValue!(DataType.UNORM_QUART)(1.0) == ubyte.max );
-    static assert( convertValue!(DataType.UNORM_QUART)(0.5) == ubyte.max/2 );
-    static assert( convertValue!(DataType.UNORM_QUART)(0.0) == 0 );
+    {
+        auto r = convertValue!(DataType.UNORM_QUART)(1.0);
+        static assert( is( typeof(r) == ubyte ) );
+        static assert( convertValue!(DataType.UNORM_QUART)(1.0) == ubyte.max );
+        static assert( convertValue!(DataType.UNORM_QUART)(0.5) == ubyte.max/2 );
+        static assert( convertValue!(DataType.UNORM_QUART)(0.0) == 0 );
+    }
 
-    static assert( is( typeof( convertValue!(DataType.UNORM_HALF)(1.0) ) == ushort ) );
-    static assert( convertValue!(DataType.UNORM_HALF)(1.0) == ushort.max );
-    static assert( convertValue!(DataType.UNORM_HALF)(0.5) == ushort.max/2 );
-    static assert( convertValue!(DataType.UNORM_HALF)(0.0) == 0 );
+    {
+        auto r = convertValue!(DataType.UNORM_HALF)(1.0);
+        static assert( is( typeof(r) == ushort ) );
+        static assert( convertValue!(DataType.UNORM_HALF)(1.0) == ushort.max );
+        static assert( convertValue!(DataType.UNORM_HALF)(0.5) == ushort.max/2 );
+        static assert( convertValue!(DataType.UNORM_HALF)(0.0) == 0 );
+    }
 
-    static assert( is( typeof( convertValue!(DataType.UNORM_FIXED)(1.0) ) == uint ) );
-    static assert( convertValue!(DataType.UNORM_FIXED)(1.0) == uint.max );
-    static assert( convertValue!(DataType.UNORM_FIXED)(0.5) == uint.max/2 );
-    static assert( convertValue!(DataType.UNORM_FIXED)(0.0) == 0 );
+    {
+        auto r = convertValue!(DataType.UNORM_FIXED)(1.0);
+        static assert( is( typeof(r) == uint ) );
+        static assert( convertValue!(DataType.UNORM_FIXED)(1.0) == uint.max );
+        static assert( convertValue!(DataType.UNORM_FIXED)(0.5) == uint.max/2 );
+        static assert( convertValue!(DataType.UNORM_FIXED)(0.0) == 0 );
+    }
 
-    static assert( is( typeof( convertValue!(DataType.UNORM_DOUBLE)(1.0) ) == ulong ) );
-    static assert( convertValue!(DataType.UNORM_DOUBLE)(1.0) == ulong.max );
-    static assert( convertValue!(DataType.UNORM_DOUBLE)(0.5) == ulong.max/2 );
-    static assert( convertValue!(DataType.UNORM_DOUBLE)(0.0) == 0 );
+    {
+        auto r = convertValue!(DataType.UNORM_DOUBLE)(1.0);
+        static assert( is( typeof(r) == ulong ) );
+        static assert( convertValue!(DataType.UNORM_DOUBLE)(1.0) == ulong.max );
+        static assert( convertValue!(DataType.UNORM_DOUBLE)(0.5) == ulong.max/2 );
+        static assert( convertValue!(DataType.UNORM_DOUBLE)(0.0) == 0 );
+    }
 
-    static assert( is( typeof( convertValue!(DataType.NORM_QUART)(1.0) ) == byte ) );
-    static assert( convertValue!(DataType.NORM_QUART)(1.0)  == byte.max );
-    static assert( convertValue!(DataType.NORM_QUART)(0.5)  == byte.max/2 );
-    static assert( convertValue!(DataType.NORM_QUART)(0.0)  == 0 );
-    static assert( convertValue!(DataType.NORM_QUART)(-0.5) == byte.min/2 );
-    static assert( convertValue!(DataType.NORM_QUART)(-1.0) == byte.min );
+    {
+        auto r = convertValue!(DataType.NORM_QUART)(1.0);
+        static assert( is( typeof(r) == byte ) );
+        static assert( convertValue!(DataType.NORM_QUART)(1.0)  == byte.max );
+        static assert( convertValue!(DataType.NORM_QUART)(0.5)  == byte.max/2 );
+        static assert( convertValue!(DataType.NORM_QUART)(0.0)  == 0 );
+        static assert( convertValue!(DataType.NORM_QUART)(-0.5) == byte.min/2 );
+        static assert( convertValue!(DataType.NORM_QUART)(-1.0) == byte.min );
+    }
 
-    static assert( is( typeof( convertValue!(DataType.NORM_HALF)(1.0) ) == short ) );
-    static assert( convertValue!(DataType.NORM_HALF)(1.0)  == short.max );
-    static assert( convertValue!(DataType.NORM_HALF)(0.5)  == short.max/2 );
-    static assert( convertValue!(DataType.NORM_HALF)(0.0)  == 0 );
-    static assert( convertValue!(DataType.NORM_HALF)(-0.5) == short.min/2 );
-    static assert( convertValue!(DataType.NORM_HALF)(-1.0) == short.min );
+    {
+        auto r = convertValue!(DataType.NORM_HALF)(1.0);
+        static assert( is( typeof(r) == short ) );
+        static assert( convertValue!(DataType.NORM_HALF)(1.0)  == short.max );
+        static assert( convertValue!(DataType.NORM_HALF)(0.5)  == short.max/2 );
+        static assert( convertValue!(DataType.NORM_HALF)(0.0)  == 0 );
+        static assert( convertValue!(DataType.NORM_HALF)(-0.5) == short.min/2 );
+        static assert( convertValue!(DataType.NORM_HALF)(-1.0) == short.min );
+    }
 
-    static assert( is( typeof( convertValue!(DataType.NORM_FIXED)(1.0) ) == int ) );
-    static assert( convertValue!(DataType.NORM_FIXED)(1.0)  == int.max );
-    static assert( convertValue!(DataType.NORM_FIXED)(0.5)  == int.max/2 );
-    static assert( convertValue!(DataType.NORM_FIXED)(0.0)  == 0 );
-    static assert( convertValue!(DataType.NORM_FIXED)(-0.5) == int.min/2 );
-    static assert( convertValue!(DataType.NORM_FIXED)(-1.0) == int.min );
+    {
+        auto r = convertValue!(DataType.NORM_FIXED)(1.0);
+        static assert( is( typeof(r) == int ) );
+        static assert( convertValue!(DataType.NORM_FIXED)(1.0)  == int.max );
+        static assert( convertValue!(DataType.NORM_FIXED)(0.5)  == int.max/2 );
+        static assert( convertValue!(DataType.NORM_FIXED)(0.0)  == 0 );
+        static assert( convertValue!(DataType.NORM_FIXED)(-0.5) == int.min/2 );
+        static assert( convertValue!(DataType.NORM_FIXED)(-1.0) == int.min );
+    }
 
-    static assert( is( typeof( convertValue!(DataType.NORM_DOUBLE)(1.0) ) == long ) );
-    static assert( convertValue!(DataType.NORM_DOUBLE)(1.0)  == long.max );
-    static assert( convertValue!(DataType.NORM_DOUBLE)(0.5)  == long.max/2 );
-    static assert( convertValue!(DataType.NORM_DOUBLE)(0.0)  == 0 );
-    static assert( convertValue!(DataType.NORM_DOUBLE)(-0.5) == long.min/2 );
-    static assert( convertValue!(DataType.NORM_DOUBLE)(-1.0) == long.min );
+    {
+        auto r = convertValue!(DataType.NORM_DOUBLE)(1.0);
+        static assert( is( typeof(r) == long ) );
+        static assert( convertValue!(DataType.NORM_DOUBLE)(1.0)  == long.max );
+        static assert( convertValue!(DataType.NORM_DOUBLE)(0.5)  == long.max/2 );
+        static assert( convertValue!(DataType.NORM_DOUBLE)(0.0)  == 0 );
+        static assert( convertValue!(DataType.NORM_DOUBLE)(-0.5) == long.min/2 );
+        static assert( convertValue!(DataType.NORM_DOUBLE)(-1.0) == long.min );
+    }
 
     convertValue!(DataType.NORM_FIXED)(-0.1);
     assertExcept!DataTypeException({ convertValue!(DataType.NORM_FIXED)(1.1); });
@@ -548,11 +581,9 @@ unittest
     assertExcept!DataTypeException({ convertValue!(DataType.UNORM_FIXED)(1.1); });
 }
 
-/+
-
 /// untyped data assign
 void utDataAssign(T...)( in ElemInfo elem, void* buffer, in T vals ) pure
-    if( is(typeof(flatData!real(vals))) )
+    //if( is(typeof(flatData!real(vals))) )
 in
 {
     assert( buffer !is null );
@@ -562,9 +593,8 @@ body
 {
     enum fmt = q{
         auto dst = arrayOutputRange( getTypedArray!(storeDataType!(%1$s))( elem.comp, buffer ).arr );
-        auto src = flatData!real(vals);
-        foreach( i, ref t; dst )
-            t = convertValue!(%1$s)( src[i] );
+        auto conv_%2$s( ElementTypeRec!(T[0]) a ) pure { return convertValue!(%1$s)(a); }
+        mapFlat!conv_%2$s( dst, vals );
     };
     mixin( getSwitchDataType( "elem.type", fmt, ["RAWBYTE": "can't operate RAWBYTE"] ) );
 }
@@ -574,12 +604,14 @@ unittest
 {
     float[] buf = [ 1.1, 2.2, 3.3, 4.4, 5.5, 6.6 ];
 
-    struct vec3 { float x,y,z; }
+    struct vec3 { double[3] dd; alias dd this; }
 
-    utDataAssign( ElemInfo( 3, DataType.FLOAT ), cast(void*)buf.ptr, vec3(8,9,10) );
+    utDataAssign( ElemInfo( 3, DataType.FLOAT ), cast(void*)(buf.ptr+1), vec3([8,9,10]) );
 
-    assert( eq( buf, [8,9,10,4.4,5.5,6.6] ) );
+    assert( eq( buf, [1.1,8,9,10,5.5,6.6] ) );
 }
+
+/+
 
 /++
     binary operation between untyped buffers
@@ -623,43 +655,8 @@ unittest
 
     assert( eq( a, [140,150,70,60] ) );
 }
-
-/++ generate switch for all DataType elements
-
-Params:
-subj = past as `switch( subj )`
-fmt = body of all cases past as formated with one argument (DataType) string
-except = exception in selected cases
-
-Example:
-    enum fmt = q{
-        auto dst = getTypedArray!(storeDataType!(%1$s))( info.comp, buffer );
-        auto src = flatData!real(vals);
-        foreach( i, ref t; dst )
-            t = convertValue!(%1$s)( src[i] );
-    };
-    writeln( genSwitchDataType( "info.type", fmt, ["RAWBYTE": "can't operate RAWBYTE"] ) );
-
-Output like this:
-
-    final switch( info.type ) {
-    case DataType.RAWBYTE: throw new DataTypeException( "can't operate RAWBYTE" );
-    case DataType.BYTE:
-            auto dst = getTypedArray!(storeDataType!(DataType.BYTE))( info.comp, buffer );
-            auto src = flatData!real(vals);
-            foreach( i, ref t; dst )
-                t = convertValue!(DataType.BYTE)( src[i] );
-    break;
-    case DataType.UBYTE:
-            auto dst = getTypedArray!(storeDataType!(DataType.UBYTE))( info.comp, buffer );
-            auto src = flatData!real(vals);
-            foreach( i, ref t; dst )
-                t = convertValue!(DataType.UBYTE)( src[i] );
-    break;
-    ...
-    }
 +/
-string getSwitchDataType( string subj, string fmt, string[string] except ) pure
+private string getSwitchDataType( string subj, string fmt, string[string] except ) pure
 {
     string[] ret = [ format( `final switch( %s ) {`, subj ) ];
 
@@ -667,7 +664,7 @@ string getSwitchDataType( string subj, string fmt, string[string] except ) pure
     auto _case( string dt ) { return "case " ~ _type(dt) ~ ": "; }
 
     auto fmt_case( string dt, string fmt )
-    { return _case(dt) ~ "\n" ~ format( fmt, _type(dt) ) ~ "\nbreak;"; }
+    { return _case(dt) ~ "\n" ~ format( fmt, _type(dt), dt ) ~ "\nbreak;"; }
 
     auto fmt_except( string dt, string msg )
     { return _case( dt ) ~ format( `throw new DataTypeException( "%s" );`, msg ); }
@@ -682,4 +679,3 @@ string getSwitchDataType( string subj, string fmt, string[string] except ) pure
 
     return ret.join("\n");
 }
-+/
