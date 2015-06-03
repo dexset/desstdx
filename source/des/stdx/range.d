@@ -76,11 +76,9 @@ unittest
 
 /++ fill output range with flat values
  +/
-void fillFlat(T,R,V,E...)( ref R output, V val, E tail ) pure
+void fillFlat(T,R,V,E...)( ref R output, V val, E tail )
     if( isOutputRange!(R,T) )
-{
-    mapFlat!(a=>to!T(a))( output, val, tail );
-}
+{ mapFlat!(a=>to!T(a))( output, val, tail ); }
 
 ///
 unittest
@@ -98,7 +96,7 @@ unittest
 
 /++ get flat length of values
  +/
-size_t getFlatLength(V,E...)( V val, E tail ) pure nothrow @nogc
+size_t getFlatLength(V,E...)( V val, E tail ) @nogc
 {
     static if( E.length > 0 )
         return getFlatLength( val ) + getFlatLength( tail );
@@ -173,7 +171,7 @@ unittest
 }
 
 /// create flat copy of vals
-auto flatData(T,E...)( in E vals ) pure
+auto flatData(T,E...)( in E vals )
 if( E.length > 0 )
 {
     auto ret = appender!(T[])();
