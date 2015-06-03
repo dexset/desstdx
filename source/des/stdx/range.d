@@ -8,34 +8,83 @@ import std.algorithm;
 import des.stdx.traits;
 import des.ts;
 
-/++ fill output range with flat values
+private version(unittest)
+{
+    struct VecN(size_t N){ float[N] data; alias data this; }
+    alias Vec=VecN!3;
+    static assert( canUseAsArray!Vec );
+}
+
+/++ fill output range with result of fn() called per elements
  +/
-void fillFlat(T,R,V,E...)( ref R output, V val, E tail ) pure
-    if( isOutputRange!(R,T) )
+void mapFlat(alias fn,R,V,E...)( ref R output, V val, E tail )
+    if( is( typeof( output.put( fn( (ElementTypeRec!V).init ) ) ) ) )
 {
     static if( E.length > 0 )
     {
-        fillFlat!T( output, val );
-        fillFlat!T( output, tail );
+        mapFlat!fn( output, val );
+        mapFlat!fn( output, tail );
     }
     else
     {
         static if( isInputRange!V )
-            foreach( l; val ) fillFlat!T( output, l );
+            foreach( l; val ) mapFlat!fn( output, l );
         else static if( canUseAsArray!V )
             foreach( i; 0 .. val.length )
-                fillFlat!T( output, val[i] );
-        else
-            output.put( to!T(val) );
+                mapFlat!fn( output, val[i] );
+        else static if( is( ElementTypeRec!V == V ) )
+            output.put( fn( val ) );
+        else static assert( 0, "V has elements, " ~
+                "but isn't input range, or not have length" );
     }
 }
 
 ///
 unittest
 {
-    static struct Vec { float[3] data; alias data this; }
-    static assert( canUseAsArray!Vec );
+    import std.array;
 
+    auto app = appender!(int[])();
+    mapFlat!(a=>to!int(a)*2)( app, [1,2], 3,
+                       [[4,5],[6]],
+                       iota(7,9),
+                       [[[9],[10,11]],[[12]]],
+                       Vec([13.3,666,105]) );
+    assertEq( app.data, [2,4,6,8,10,12,14,16,18,20,22,24,26,1332,210] );
+}
+
+///
+template ElementTypeRec(T)
+{
+    static if( is( ElementType!T == void ) ) // is not range or array
+        alias ElementTypeRec = T;
+    else // if is range or array
+        alias ElementTypeRec = ElementTypeRec!(ElementType!T);
+}
+
+///
+unittest
+{
+    static assert( is( ElementTypeRec!int == int ) );
+    static assert( is( ElementTypeRec!(int[]) == int ) );
+    static assert( is( ElementTypeRec!(int[2]) == int ) );
+    static assert( is( ElementTypeRec!(int[][]) == int ) );
+    static assert( is( ElementTypeRec!(int[3][2]) == int ) );
+    static assert( is( ElementTypeRec!(typeof(iota(7))) == int ) );
+    static assert( is( ElementTypeRec!(VecN!10) == float ) );
+}
+
+/++ fill output range with flat values
+ +/
+void fillFlat(T,R,V,E...)( ref R output, V val, E tail ) pure
+    if( isOutputRange!(R,T) )
+{
+    mapFlat!(a=>to!T(a))( output, val, tail );
+}
+
+///
+unittest
+{
     import std.array;
 
     auto app = appender!(int[])();
@@ -75,8 +124,6 @@ size_t getFlatLength(V,E...)( V val, E tail ) pure nothrow @nogc
 ///
 unittest
 {
-    static struct Vec { float[3] data; alias data this; }
-
     assertEq( getFlatLength( 1,2,3 ), 3 );
     assertEq( getFlatLength( [1,2,3] ), 3 );
     assertEq( getFlatLength( Vec([1,2,3]) ), 3 );
@@ -139,7 +186,6 @@ unittest
 {
     assertEq( flatData!float([1.0,2],[[3,4]],5,[6,7]), [1,2,3,4,5,6,7] );
 
-    static struct Vec(size_t N){ float[N] data; alias data this; }
-    assertEq( flatData!double( Vec!3([1,2,3]) ), [1,2,3] );
-    assertEq( flatData!double( Vec!1([2]) ), [2] );
+    assertEq( flatData!double( VecN!3([1,2,3]) ), [1,2,3] );
+    assertEq( flatData!double( VecN!1([2]) ), [2] );
 }

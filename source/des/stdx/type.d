@@ -8,6 +8,7 @@ import std.math : abs;
 import std.exception : enforce;
 
 import des.ts;
+import des.stdx.range;
 
 ///
 class DataTypeException : Exception
@@ -548,7 +549,6 @@ unittest
 }
 
 /+
-TODO: move here `flatData`
 
 /// untyped data assign
 void utDataAssign(T...)( in ElemInfo elem, void* buffer, in T vals ) pure
@@ -556,12 +556,12 @@ void utDataAssign(T...)( in ElemInfo elem, void* buffer, in T vals ) pure
 in
 {
     assert( buffer !is null );
-    assert( elem.comp == flatData!real(vals).length );
+    assert( elem.comp == getFlatLength(vals) );
 }
 body
 {
     enum fmt = q{
-        auto dst = getTypedArray!(storeDataType!(%1$s))( elem.comp, buffer );
+        auto dst = arrayOutputRange( getTypedArray!(storeDataType!(%1$s))( elem.comp, buffer ).arr );
         auto src = flatData!real(vals);
         foreach( i, ref t; dst )
             t = convertValue!(%1$s)( src[i] );
