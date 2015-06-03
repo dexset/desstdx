@@ -17,6 +17,9 @@ struct `PData` (for storing information for passing to other thread for example)
 #### string
 `toCamelCase`, `toSnakeCase`, `toDString` functions
 
+#### pformat
+simple `pure nothow` converting integer and floating numbers to string
+
 #### traits
 
 #### type

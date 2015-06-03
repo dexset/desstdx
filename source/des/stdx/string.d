@@ -4,9 +4,13 @@ public import std.string;
 
 import std.array;
 import std.algorithm;
+import std.traits;
+import std.range;
 
 import des.ts;
 import des.stdx.type : getTypedArray;
+
+public import des.stdx.pformat;
 
 ///
 string toSnakeCase( in string str, bool ignore_first=true ) @property pure @trusted
