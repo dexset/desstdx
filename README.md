@@ -15,6 +15,8 @@ assertEq( pFormat( "hello % 6.3f world %d ok",  3.141592, 12 ), "hello  3.141 wo
 assertEq( pFormat( "%2$10s %1$s", "hello", "world" ), "     world hello" );
 assertEq( pFormat( "%1$10s %1$s", "hello" ), "     hello hello" );
 ```
+##### use with caution: arrays, custom types, enums, not implemented yet. only
+numbers and strings 
 
 #### bitflags
 manipulate bit flags
