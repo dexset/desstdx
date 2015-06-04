@@ -253,6 +253,8 @@ if( isNumeric!T )
     else return val >= 0;
 }
 
+/++++++++++++ pFormat ++++++++++++/
+
 class PFormatException : Exception
 {
     this( string msg, string file=__FILE__, size_t line=__LINE__ ) pure @safe nothrow
