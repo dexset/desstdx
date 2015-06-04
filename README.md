@@ -5,6 +5,17 @@
 #### algorithm
 minimal wraps around `std.algorithm`
 
+#### pformat
+simple `pure nothow` converting integer and floating numbers to string
+
+##### WIP `string pFormat(Args...)( string fmt, Args args ) pure` 
+```d
+assertEq( pFormat( "%4d", 10 ), "  10" );
+assertEq( pFormat( "hello % 6.3f world %d ok",  3.141592, 12 ), "hello  3.141 world 12 ok" );
+assertEq( pFormat( "%2$10s %1$s", "hello", "world" ), "     world hello" );
+assertEq( pFormat( "%1$10s %1$s", "hello" ), "     hello hello" );
+```
+
 #### bitflags
 manipulate bit flags
 
@@ -16,9 +27,6 @@ struct `PData` (for storing information for passing to other thread for example)
 
 #### string
 `toCamelCase`, `toSnakeCase`, `toDString` functions
-
-#### pformat
-simple `pure nothow` converting integer and floating numbers to string
 
 #### traits
 
