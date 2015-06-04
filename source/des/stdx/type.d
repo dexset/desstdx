@@ -583,7 +583,7 @@ unittest
 
 /// untyped data assign
 void utDataAssign(T...)( in ElemInfo elem, void* buffer, in T vals ) pure
-    //if( is(typeof(flatData!real(vals))) )
+    if( is(typeof(flatData!real(vals))) )
 in
 {
     assert( buffer !is null );
@@ -611,16 +611,14 @@ unittest
     assert( eq( buf, [1.1,8,9,10,5.5,6.6] ) );
 }
 
-/+
-
-/++
-    binary operation between untyped buffers
-
-    Params:
-        info = common to all buffers information
-        dst = result buffer ptr
-        uta = buffer ptr A
-        utb = buffer ptr B
+/++  binary operation between untyped buffers
+ +
+ +  logicaly equals opAssign ( a op= b )
+ +
+ +  Params:
+ +      elem = common to all buffers information
+ +      dst = result buffer ptr
+ +      utb = buffer ptr B
  +/
 void utDataOp(string op)( in ElemInfo elem, void* dst, void* utb ) pure
 if( ( op == "+" || op == "-" || op == "*" || op == "/" ) )
@@ -632,7 +630,7 @@ in
 body
 {
     enum fmt = format( q{
-        alias SDT = storeDataType!(%%1$s);
+        alias SDT = storeDataType!(%%1$s); // %%2$s not used
         auto ta = getTypedArray!SDT( elem.comp, dst );
         auto tb = getTypedArray!SDT( elem.comp, utb );
         foreach( i, ref r; ta )
@@ -649,13 +647,13 @@ unittest
 
     utDataOp!"+"( ElemInfo( 4, DataType.UNORM_QUART ), a.ptr, b.ptr );
 
-    assert( eq( a, [70,90,70,60] ) );
+    assertEq( a, [70,90,70,60] );
 
     utDataOp!"+"( ElemInfo( 2, DataType.UBYTE ), a.ptr, a.ptr + 2 );
 
     assert( eq( a, [140,150,70,60] ) );
 }
-+/
+
 private string getSwitchDataType( string subj, string fmt, string[string] except ) pure
 {
     string[] ret = [ format( `final switch( %s ) {`, subj ) ];
