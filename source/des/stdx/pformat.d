@@ -253,11 +253,6 @@ if( isNumeric!T )
     else return val >= 0;
 }
 
-// TODO WIP
-
-static if( true )
-{
-
 class PFormatException : Exception
 {
     this( string msg, string file=__FILE__, size_t line=__LINE__ ) pure @safe nothrow
@@ -563,6 +558,4 @@ private string procArg(T)( T arg, in PFormatArg e )
 
         case PFormatArg.Type.ERR: assert( 0, "error type" );
     }
-}
-
 }
