@@ -1,0 +1,6 @@
+name "desstdx"
+description "D Extended Set Standart Lib Extend"
+authors "Oleg Butko (deviator)"
+license "MIT"
+targetType "sourceLibrary"
+dependency "dests" version="~>0.2.5"
