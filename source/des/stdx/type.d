@@ -575,10 +575,10 @@ unittest
     }
 
     convertValue!(DataType.NORM_FIXED)(-0.1);
-    assertExcept!DataTypeException({ convertValue!(DataType.NORM_FIXED)(1.1); });
+    assertThrown!DataTypeException( convertValue!(DataType.NORM_FIXED)(1.1) );
 
-    assertExcept!DataTypeException({ convertValue!(DataType.UNORM_FIXED)(-0.1); });
-    assertExcept!DataTypeException({ convertValue!(DataType.UNORM_FIXED)(1.1); });
+    assertThrown!DataTypeException( convertValue!(DataType.UNORM_FIXED)(-0.1) );
+    assertThrown!DataTypeException( convertValue!(DataType.UNORM_FIXED)(1.1) );
 }
 
 /// untyped data assign
